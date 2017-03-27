@@ -26,5 +26,5 @@ func main() {
 	if err := h.Start(); err != nil {
 		panic(err)
 	}
-	h.wg.Wait()
+	h.Wait()
 }

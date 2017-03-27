@@ -20,7 +20,7 @@ type hub struct {
 	conns    chan net.Conn
 	err      chan error
 	debug    bool
-	wg       *sync.WaitGroup
+	*sync.WaitGroup
 
 	addr                                string
 	acceptGoroutines, handlerGoroutines int
@@ -130,8 +130,8 @@ func (h *hub) Start() error {
 	}
 	h.listener = ln
 
-	h.wg = new(sync.WaitGroup)
-	h.wg.Add(h.acceptGoroutines + h.handlerGoroutines)
+	h.WaitGroup = new(sync.WaitGroup)
+	h.WaitGroup.Add(h.acceptGoroutines + h.handlerGoroutines)
 
 	for i := 0; i < h.acceptGoroutines; i++ {
 		go h.accept()
@@ -154,7 +154,7 @@ func (h *hub) accept() {
 		}
 		h.conns <- conn
 	}
-	h.wg.Done()
+	h.WaitGroup.Done()
 }
 
 func (h *hub) openHandlers() {
@@ -183,7 +183,7 @@ func (h *hub) openHandlers() {
 			}
 		}
 	}
-	h.wg.Done()
+	h.WaitGroup.Done()
 }
 
 func (h *hub) interceptErrors() {
