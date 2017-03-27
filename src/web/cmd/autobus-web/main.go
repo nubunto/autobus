@@ -1,0 +1,36 @@
+package main
+
+import (
+	"database/sql"
+	"os"
+	"web/app"
+
+	"github.com/goadesign/goa"
+	"github.com/goadesign/goa/middleware"
+	_ "github.com/lib/pq"
+)
+
+func main() {
+	// Create service
+	service := goa.New("autobus-web")
+
+	// Mount middleware
+	service.Use(middleware.RequestID())
+	service.Use(middleware.LogRequest(true))
+	service.Use(middleware.ErrorHandler(service, true))
+	service.Use(middleware.Recover())
+
+	// Mount "GPS" controller
+	db, err := sql.Open("postgres", os.Getenv("AUTOBUS_PLATFORM_PGSQL"))
+	if err != nil {
+		panic(err)
+	}
+
+	c := NewGPSController(service, db)
+	app.MountGPSController(service, c)
+
+	// Start service
+	if err := service.ListenAndServe(":8080"); err != nil {
+		service.LogError("startup", "err", err)
+	}
+}

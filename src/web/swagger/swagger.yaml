@@ -1,0 +1,31 @@
+consumes:
+- application/json
+- application/xml
+- application/gob
+- application/x-gob
+host: localhost:8080
+info:
+  description: The web platform for the Autobus Tracker
+  version: ""
+paths:
+  /gps:
+    get:
+      operationId: GPS#show
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+      schemes:
+      - http
+      summary: show GPS
+      tags:
+      - GPS
+produces:
+- application/json
+- application/xml
+- application/gob
+- application/x-gob
+schemes:
+- http
+swagger: "2.0"

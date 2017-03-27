@@ -1,0 +1,4 @@
+FROM alpine:3.5
+
+ADD bin/autobus-web-linux-amd64 /
+CMD ["/autobus-web-linux-amd64"]

@@ -1,0 +1,14 @@
+version: "3.0"
+services:
+  core:
+    build:
+      context: .
+      dockerfile: Dockerfile.autobus-core
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.autobus-web
+  platform:
+    build:
+      context: .
+      dockerfile: Dockerfile.autobus-platform
