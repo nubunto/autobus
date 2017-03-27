@@ -32,7 +32,7 @@ func main() {
 	}
 
 	fmt.Println("Connecting to nats...")
-	nc, err := nats.Connect(os.Getenv("AUTOBUS_PLATFORM_NATS"))
+	nc, err := nats.Connect(os.Getenv("AUTOBUS_PLATFORM_NATS_URL"))
 	if err != nil {
 		panic(err)
 	}
