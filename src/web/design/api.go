@@ -1,6 +1,8 @@
 package design
 
 import (
+	"os"
+
 	. "github.com/goadesign/goa/design"
 	. "github.com/goadesign/goa/design/apidsl"
 )
@@ -8,7 +10,7 @@ import (
 var _ = API("autobus-web", func() {
 	Description("The web platform for the Autobus Tracker")
 	Scheme("http")
-	Host("localhost:8080")
+	Host(os.Getenv("AUTOBUS_WEB_HOST"))
 })
 
 var _ = Resource("GPS", func() {

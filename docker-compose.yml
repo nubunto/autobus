@@ -8,36 +8,26 @@ services:
       - nats
     environment:
       - AUTOBUS_CORE_NATS_URL=nats://nats:4222
-    ports:
-      - "9009:9009"
-    restart: on-failure
+
   web:
     build:
       context: .
       dockerfile: Dockerfile.autobus-web
     links:
       - postgres
-    environment:
-      - AUTOBUS_WEB_PGSQL=postgres://postgres:postgres@postgres/autobus
-    ports:
-      - "8080:8080"
-    restart: on-failure
+
   platform:
     build:
       context: .
       dockerfile: Dockerfile.autobus-platform
     links:
       - nats
+      - postgres
     environment:
       - AUTOBUS_PLATFORM_NATS_URL=nats://nats:4222
-    restart: on-failure
+
   nats:
     image: nats:0.9.6
-    restart: always
+
   postgres:
     image: postgres:9.6
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=autobus
-      - POSTGRES_PASSWORD=postgres
-    restart: always

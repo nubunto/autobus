@@ -1,0 +1,21 @@
+version: "3.0"
+services:
+    core:
+        ports:
+            - "9009:9009"
+    web:
+        ports:
+            - "8080:8080"
+        environment:
+            AUTOBUS_WEB_PGSQL: postgres://postgres:postgres@postgres/autobus?sslmode=disable
+            AUTOBUS_WEB_HOST: 0.0.0.0:8080
+    platform:
+        environment:
+            AUTOBUS_PLATFORM_PGSQL: postgres://postgres:postgres@postgres/autobus?sslmode=disable
+    postgres:
+        ports:
+            - "5432:5432"
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: autobus

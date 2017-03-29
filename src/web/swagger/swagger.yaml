@@ -3,7 +3,7 @@ consumes:
 - application/xml
 - application/gob
 - application/x-gob
-host: localhost:8080
+host: localhost:9081
 info:
   description: The web platform for the Autobus Tracker
   version: ""

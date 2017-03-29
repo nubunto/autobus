@@ -1,0 +1,25 @@
+version: "3.0"
+services:
+    core:
+        ports:
+            - "9009:9009"
+        restart: on-failure
+    web:
+        ports:
+            - "80:80"
+        environment:
+            AUTOBUS_WEB_PGSQL: postgres://postgres:postgres@postgres/autobus?sslmode=disable
+            AUTOBUS_WEB_HOST: 0.0.0.0:80
+        restart: on-failure
+    platform:
+        environment:
+            AUTOBUS_PLATFORM_PGSQL: postgres://postgres:postgres@postgres/autobus?sslmode=disable
+        restart: on-failure
+    postgres:
+        ports:
+            - "5432:5432"
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: autobus
+        restart: always
