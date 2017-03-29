@@ -3,23 +3,32 @@ package main
 import (
 	"bytes"
 	"database/sql"
-	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"strconv"
 	"strings"
+
 	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/nats-io/nats"
+	"github.com/pkg/errors"
 )
 
+const stupidDateTimeLayout = "020106150405"
+
 type Message struct {
-	ID        string
-	Date      time.Time
-	Latitude  string
-	Longitude string
-	Status    string
+	MessageHead string
+	ID          string
+	Type        string
+	Valid       bool
+	Latitude    float64
+	Longitude   float64
+	DateTime    time.Time
+	Speed       float64
+	Direction   int64
+	Status      string
 }
 
 func main() {
@@ -31,38 +40,34 @@ func main() {
 		horizontalConcurrency = 1 << 10
 	}
 
-	fmt.Println("Connecting to nats...")
-	nc, err := nats.Connect(os.Getenv("AUTOBUS_PLATFORM_NATS_URL"))
+	logger := log.New(os.Stdout, "autobus-platform: ", log.LstdFlags)
+	natsURL := os.Getenv("AUTOBUS_PLATFORM_NATS_URL")
+	logger.Println("Connecting to nats @", natsURL)
+	nc, err := nats.Connect(natsURL)
 	if err != nil {
-		panic(err)
+		logger.Fatal("error while connecting to nats:", err)
 	}
 
-	db, err := sql.Open("postgres", os.Getenv("AUTOBUS_PLATFORM_PGSQL"))
+	dbURL := os.Getenv("AUTOBUS_PLATFORM_PGSQL")
+	logger.Println("Connecting to postgres @", dbURL)
+	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
-		panic(err)
+		logger.Fatal("error while connecting to postgres:", err)
 	}
 
-	fmt.Println("Asynchronously waiting for messages...")
+	logger.Println("Asynchronously waiting for messages...")
 	for i := 0; i < horizontalConcurrency; i++ {
 		go nc.QueueSubscribe("gps.update", "queue.pgsql", func(m *nats.Msg) {
-			strData := string(m.Data)
-			fmt.Println("Got message:", strData, len(strData))
-			parsed, err := parseMessage(m.Data)
-			if err != nil {
-				// bail
-				fmt.Println("error:", err)
+			log.Println("Got message:", m.Data, "length:", len(m.Data))
+			var parsed Message
+			if err := parsed.UnmarshalText(m.Data); err != nil {
+				logger.Println("[ERROR] error while parsing the gps message: ", err)
 				return
 			}
-			fmt.Println("Inserting in the database...")
-			if _, err := db.Exec("INSERT INTO gps_data (id, time, date, latitude, longitude, status) VALUES ($1, $2, $3, $4, $5, $6)",
-				parsed.ID,
-				parsed.Date.Format("15:04:05"),
-				parsed.Date.Format("02 Jan 2006"),
-				parsed.Latitude,
-				parsed.Longitude,
-				parsed.Status,
-			); err != nil {
-				fmt.Println("got error:", err)
+			logger.Println("Inserting in the database... parsed:", parsed)
+			if err := parsed.Insert(db); err != nil {
+				logger.Println("[ERROR] error while inserting gps data to the database: ", err)
+				return
 			}
 		})
 	}
@@ -70,31 +75,110 @@ func main() {
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
 	<-sig
+	logger.Println("shutting autobus-platform down...")
 }
 
-func parseMessage(raw []byte) (msg Message, err error) {
+func (msg *Message) UnmarshalText(raw []byte) (err error) {
 	beginning := bytes.Index(raw, []byte("*"))
 	end := bytes.LastIndex(raw, []byte("#"))
+	if end > len(raw) {
+		return errors.Errorf("end of message is impossible to reach. beginning=%d end=%d", beginning, end)
+	}
 	if beginning == -1 {
-		return Message{}, fmt.Errorf("malformed message: no beginning")
+		return errors.New("malformed message: no beginning")
 	}
 	if end == -1 {
-		return Message{}, fmt.Errorf("malformed message: no end")
+		return errors.New("malformed message: no end")
 	}
-	fmt.Println("beginning:", beginning, "end:", end)
+
 	raw = raw[beginning:end]
 	if len(raw) < 60 {
-		return Message{}, fmt.Errorf("the raw data has insufficient data")
+		return errors.New("the raw data has insufficient data")
 	}
+
 	rawStr := string(raw)
 	parts := strings.Split(rawStr, ",")
+	log.Println(parts)
+	msg.MessageHead = parts[0]
 	msg.ID = parts[1]
-	//time := parts[3]
-	msg.Latitude = parts[5]
-	// TODO: South or North (parts[6] == N or S)
-	msg.Longitude = parts[7]
-	// TODO: East or West (parts[8] == E or W)
-	//date := parts[11]
+	msg.Type = parts[2]
+
+	// TODO time
+	timePart := parts[3]
+
+	valid := parts[4]
+	if "A" == valid {
+		msg.Valid = true
+	} else if "S" == valid {
+		msg.Valid = false
+	} else {
+		return errors.Errorf("error decoding valid (raw: %s)", valid)
+	}
+
+	longitude := parts[5]
+	msg.Latitude, err = strconv.ParseFloat(longitude, 64)
+	if err != nil {
+		return errors.Wrapf(err, "error decoding the latitude (raw: %s)", longitude)
+	}
+
+	latitudeDir := parts[6]
+	if latitudeDir != "S" && latitudeDir != "N" {
+		return errors.Errorf("latitude direction should be either S or N (south or north), it is %s", latitudeDir)
+	}
+	if "S" == latitudeDir {
+		msg.Latitude = -msg.Latitude
+	}
+
+	latitude := parts[7]
+	msg.Longitude, err = strconv.ParseFloat(latitude, 64)
+	if err != nil {
+		return errors.Wrapf(err, "error decoding the longitude (raw: %s)", latitude)
+	}
+
+	longitudeDir := parts[8]
+	if longitudeDir != "E" && longitudeDir != "W" {
+		return errors.Errorf("longitude direction should be either E or W (east or west), it is %s", longitudeDir)
+	}
+	if "W" == longitudeDir {
+		msg.Longitude = -msg.Longitude
+	}
+
+	speed := parts[9]
+	if speed != "" {
+		msg.Speed, err = strconv.ParseFloat(speed, 64)
+		if err != nil {
+			return errors.Wrapf(err, "error decoding speed (raw: %s)", speed)
+		}
+	}
+
+	direction := parts[10]
+	if direction != "" {
+		msg.Direction, err = strconv.ParseInt(direction, 10, 64)
+		if err != nil {
+			return errors.Wrapf(err, "error decoding direction (raw: %s)", direction)
+		}
+	}
+
+	// TODO date
+	datePart := parts[11]
+
+	fullDateAndTime := datePart + timePart
+	msg.DateTime, err = time.Parse(stupidDateTimeLayout, fullDateAndTime)
+	if err != nil {
+		return errors.Wrapf(err, "error decoding time (raw: time: %s - date: %s)", timePart, datePart)
+	}
 	msg.Status = parts[12]
-	return msg, nil
+	return nil
+}
+
+func (m *Message) Insert(db *sql.DB) (err error) {
+	_, err = db.Exec("INSERT INTO gps_data (id, time, date, latitude, longitude, status) VALUES ($1, $2, $3, $4, $5, $6)",
+		m.ID,
+		m.DateTime.Format("15:04:05"),
+		m.DateTime.Format("02 Jan 2006"),
+		m.Latitude,
+		m.Longitude,
+		m.Status,
+	)
+	return
 }
