@@ -192,6 +192,12 @@
 			"path": "/codec"
 		},
 		{
+			"importpath": "github.com/yuin/gopher-lua",
+			"repository": "https://github.com/yuin/gopher-lua",
+			"revision": "65fb8eeb2aa6d29a7b654d61afd1a07ce3897cc9",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/zach-klippenstein/goregen",
 			"repository": "https://github.com/zach-klippenstein/goregen",
 			"revision": "795b5e3961ea1912fde60af417ad85e86acc0d6a",
@@ -231,6 +237,18 @@
 			"revision": "1f0f7f68c993a0ff4e0fe1793c08cdd14cc243cb",
 			"branch": "master",
 			"path": "/go/ast/astutil"
+		},
+		{
+			"importpath": "gopkg.in/mgo.v2",
+			"repository": "https://gopkg.in/mgo.v2",
+			"revision": "3f83fa5005286a7fe593b055f0d7771a7dce4655",
+			"branch": "v2"
+		},
+		{
+			"importpath": "gopkg.in/tomb.v2",
+			"repository": "https://gopkg.in/tomb.v2",
+			"revision": "d5d1b5820637886def9eef33e03a27a9f166942c",
+			"branch": "v2"
 		},
 		{
 			"importpath": "gopkg.in/yaml.v2",

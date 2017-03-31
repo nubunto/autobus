@@ -33,8 +33,8 @@ Of course, each binary can be run independently. Build with `$ gb build`, and ru
 - When a GPS connects, it pushes data through the socket, which is then forwarded to the configured NATS, in the `gps.update` subject.
   - The `autobus-platform` application forms a queue group under `queue.pgsql`, on the subject `gps.update`.
   - The `autobus-platform` application can easily be scaled horizontally (see AUTOBUS_PLATFORM_HORIZONTAL) *and* vertically (start new ones, yay NATS!)
-  - The `autobus-platform`, then, with the payload received from `autobus-core` via the `gps.update` subject, (tries to) parse and inserts the GPS update on the underlying PostgreSQL database.
-- The `autobus-web` application, when requested, access the PostgreSQL database, querying the GPS messages table.
+  - The `autobus-platform`, then, with the payload received from `autobus-core` via the `gps.update` subject, (tries to) parse and inserts the GPS update on the underlying MongoDB database. There's a capped (2kb) collection for transient data, and a cold collection for further storage.
+- The `autobus-web` application, when requested, access the MongoDB database, querying the GPS messages table.
 
 Whew! Hope you now have a clue on what the applications main responsibility is.
 
@@ -51,8 +51,8 @@ Whew! Hope you now have a clue on what the applications main responsibility is.
 ## Autobus Platform
 - `AUTOBUS_PLATFORM_HORIZONTAL`: Tweaks the number of goroutines that register callbacks on the NATS client. Tweaking this should parallellize the queue output rate, but this also increases the load on the database. Discretion is advised. Default is 1024.
 - `AUTOBUS_PLATFORM_NATS_URL`: The NATS URL the platform will listen messages in. Should be the same subject name as Autobus Core. The queue group name is `queue.pgsql`.
-- `AUTOBUS_PLATFORM_PGSQL`: The PostgreSQL URL it will insert GPS messages into. TODO: more details on the schema.
+- `AUTOBUS_PLATFORM_MONGO_URL`: The MongoDB servers it will insert GPS messages into. TODO: more details on the schema.
 
 ## Autobus Web
 - `AUTOBUS_WEB_HOST`: Sets the host for the API **and** where the server will listen to incoming requests.
-- `AUTOBUS_WEB_PGSQL`: Sets the PostgreSQL URL it will read from.
+- `AUTOBUS_WEB_MONGO_URL`: Sets the PostgreSQL URL it will read from.

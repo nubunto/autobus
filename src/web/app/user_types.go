@@ -10,21 +10,35 @@
 
 package app
 
+import (
+	"time"
+)
+
 // The GPS data received by the core Autobus application
 type gps struct {
-	Date      *string `form:"date,omitempty" json:"date,omitempty" xml:"date,omitempty"`
-	ID        *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
-	Latitude  *string `form:"latitude,omitempty" json:"latitude,omitempty" xml:"latitude,omitempty"`
-	Longitude *string `form:"longitude,omitempty" json:"longitude,omitempty" xml:"longitude,omitempty"`
-	Status    *string `form:"status,omitempty" json:"status,omitempty" xml:"status,omitempty"`
-	Time      *string `form:"time,omitempty" json:"time,omitempty" xml:"time,omitempty"`
+	DateTime  *time.Time `form:"dateTime,omitempty" json:"dateTime,omitempty" xml:"dateTime,omitempty"`
+	Direction *int       `form:"direction,omitempty" json:"direction,omitempty" xml:"direction,omitempty"`
+	Head      *string    `form:"head,omitempty" json:"head,omitempty" xml:"head,omitempty"`
+	ID        *string    `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	Latitude  *float64   `form:"latitude,omitempty" json:"latitude,omitempty" xml:"latitude,omitempty"`
+	Longitude *float64   `form:"longitude,omitempty" json:"longitude,omitempty" xml:"longitude,omitempty"`
+	Speed     *float64   `form:"speed,omitempty" json:"speed,omitempty" xml:"speed,omitempty"`
+	Status    *string    `form:"status,omitempty" json:"status,omitempty" xml:"status,omitempty"`
+	Type      *string    `form:"type,omitempty" json:"type,omitempty" xml:"type,omitempty"`
+	Valid     *bool      `form:"valid,omitempty" json:"valid,omitempty" xml:"valid,omitempty"`
 }
 
 // Publicize creates Gps from gps
 func (ut *gps) Publicize() *Gps {
 	var pub Gps
-	if ut.Date != nil {
-		pub.Date = ut.Date
+	if ut.DateTime != nil {
+		pub.DateTime = ut.DateTime
+	}
+	if ut.Direction != nil {
+		pub.Direction = ut.Direction
+	}
+	if ut.Head != nil {
+		pub.Head = ut.Head
 	}
 	if ut.ID != nil {
 		pub.ID = ut.ID
@@ -35,21 +49,31 @@ func (ut *gps) Publicize() *Gps {
 	if ut.Longitude != nil {
 		pub.Longitude = ut.Longitude
 	}
+	if ut.Speed != nil {
+		pub.Speed = ut.Speed
+	}
 	if ut.Status != nil {
 		pub.Status = ut.Status
 	}
-	if ut.Time != nil {
-		pub.Time = ut.Time
+	if ut.Type != nil {
+		pub.Type = ut.Type
+	}
+	if ut.Valid != nil {
+		pub.Valid = ut.Valid
 	}
 	return &pub
 }
 
 // The GPS data received by the core Autobus application
 type Gps struct {
-	Date      *string `form:"date,omitempty" json:"date,omitempty" xml:"date,omitempty"`
-	ID        *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
-	Latitude  *string `form:"latitude,omitempty" json:"latitude,omitempty" xml:"latitude,omitempty"`
-	Longitude *string `form:"longitude,omitempty" json:"longitude,omitempty" xml:"longitude,omitempty"`
-	Status    *string `form:"status,omitempty" json:"status,omitempty" xml:"status,omitempty"`
-	Time      *string `form:"time,omitempty" json:"time,omitempty" xml:"time,omitempty"`
+	DateTime  *time.Time `form:"dateTime,omitempty" json:"dateTime,omitempty" xml:"dateTime,omitempty"`
+	Direction *int       `form:"direction,omitempty" json:"direction,omitempty" xml:"direction,omitempty"`
+	Head      *string    `form:"head,omitempty" json:"head,omitempty" xml:"head,omitempty"`
+	ID        *string    `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	Latitude  *float64   `form:"latitude,omitempty" json:"latitude,omitempty" xml:"latitude,omitempty"`
+	Longitude *float64   `form:"longitude,omitempty" json:"longitude,omitempty" xml:"longitude,omitempty"`
+	Speed     *float64   `form:"speed,omitempty" json:"speed,omitempty" xml:"speed,omitempty"`
+	Status    *string    `form:"status,omitempty" json:"status,omitempty" xml:"status,omitempty"`
+	Type      *string    `form:"type,omitempty" json:"type,omitempty" xml:"type,omitempty"`
+	Valid     *bool      `form:"valid,omitempty" json:"valid,omitempty" xml:"valid,omitempty"`
 }

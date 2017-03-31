@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"database/sql"
 	"log"
 	"os"
 	"os/signal"
@@ -14,6 +13,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/nats-io/nats"
 	"github.com/pkg/errors"
+	mgo "gopkg.in/mgo.v2"
 )
 
 const stupidDateTimeLayout = "020106150405"
@@ -41,31 +41,37 @@ func main() {
 	}
 
 	logger := log.New(os.Stdout, "autobus-platform: ", log.LstdFlags)
+
 	natsURL := os.Getenv("AUTOBUS_PLATFORM_NATS_URL")
 	logger.Println("Connecting to nats @", natsURL)
+
 	nc, err := nats.Connect(natsURL)
 	if err != nil {
 		logger.Fatal("error while connecting to nats:", err)
 	}
 
-	dbURL := os.Getenv("AUTOBUS_PLATFORM_PGSQL")
-	logger.Println("Connecting to postgres @", dbURL)
-	db, err := sql.Open("postgres", dbURL)
+	dbURL := os.Getenv("AUTOBUS_PLATFORM_MONGO_URL")
+	logger.Println("Connecting to db @", dbURL)
+
+	session, err := mgo.Dial(dbURL)
 	if err != nil {
-		logger.Fatal("error while connecting to postgres:", err)
+		logger.Fatal("error while connecting to db:", err)
 	}
+	defer session.Close()
 
 	logger.Println("Asynchronously waiting for messages...")
 	for i := 0; i < horizontalConcurrency; i++ {
-		go nc.QueueSubscribe("gps.update", "queue.pgsql", func(m *nats.Msg) {
+		go nc.QueueSubscribe("gps.update", "queue.web.database", func(m *nats.Msg) {
 			log.Println("Got message:", m.Data, "length:", len(m.Data))
+
 			var parsed Message
 			if err := parsed.UnmarshalText(m.Data); err != nil {
 				logger.Println("[ERROR] error while parsing the gps message: ", err)
 				return
 			}
+
 			logger.Println("Inserting in the database... parsed:", parsed)
-			if err := parsed.Insert(db); err != nil {
+			if err := parsed.Insert(session); err != nil {
 				logger.Println("[ERROR] error while inserting gps data to the database: ", err)
 				return
 			}
@@ -171,14 +177,14 @@ func (msg *Message) UnmarshalText(raw []byte) (err error) {
 	return nil
 }
 
-func (m *Message) Insert(db *sql.DB) (err error) {
-	_, err = db.Exec("INSERT INTO gps_data (id, time, date, latitude, longitude, status) VALUES ($1, $2, $3, $4, $5, $6)",
-		m.ID,
-		m.DateTime.Format("15:04:05"),
-		m.DateTime.Format("02 Jan 2006"),
-		m.Latitude,
-		m.Longitude,
-		m.Status,
-	)
-	return
+func (m *Message) Insert(session *mgo.Session) error {
+	transient := session.DB("autobus").C("gps_data_transient")
+	persisted := session.DB("autobus").C("gps_data")
+	if err := transient.Insert(m); err != nil {
+		return errors.Wrap(err, "error while inserting to transient collection")
+	}
+	if err := persisted.Insert(m); err != nil {
+		return errors.Wrap(err, "error while inserting to persisted collection")
+	}
+	return nil
 }
