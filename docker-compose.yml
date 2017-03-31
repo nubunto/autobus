@@ -14,7 +14,7 @@ services:
       context: .
       dockerfile: Dockerfile.autobus-web
     links:
-      - postgres
+      - mongo
 
   platform:
     build:
@@ -22,12 +22,12 @@ services:
       dockerfile: Dockerfile.autobus-platform
     links:
       - nats
-      - postgres
+      - mongo
     environment:
       - AUTOBUS_PLATFORM_NATS_URL=nats://nats:4222
 
   nats:
     image: nats:0.9.6
 
-  postgres:
-    image: postgres:9.6
+  mongo:
+    image: mongo:3.0
