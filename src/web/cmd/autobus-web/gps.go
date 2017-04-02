@@ -5,14 +5,13 @@ import (
 	"web/app"
 
 	"github.com/goadesign/goa"
-	mgo "gopkg.in/mgo.v2"
 	bson "gopkg.in/mgo.v2/bson"
 )
 
 // GPSController implements the GPS resource.
 type GPSController struct {
 	*goa.Controller
-	*mgo.Session
+	*Env
 }
 
 type Message struct {
@@ -51,16 +50,16 @@ func (md MessageData) toGpsMedia() []*app.GpsMedia {
 }
 
 // NewGPSController creates a GPS controller.
-func NewGPSController(service *goa.Service, session *mgo.Session) *GPSController {
+func NewGPSController(service *goa.Service, env *Env) *GPSController {
 	return &GPSController{
 		Controller: service.NewController("GPSController"),
-		Session:    session,
+		Env:        env,
 	}
 }
 
 // Show runs the show action.
 func (c *GPSController) Show(ctx *app.ShowGPSContext) error {
-	transient := c.Session.DB("autobus").C("gps_data_transient")
+	transient := c.DB("autobus").C("gps_data_transient")
 	var gpsData MessageData
 	if err := transient.Find(bson.M{}).All(&gpsData); err != nil {
 		return err

@@ -8,10 +8,9 @@
 //
 // The content of this file is auto-generated, DO NOT MODIFY
 
-package app
+package client
 
 import (
-	"github.com/goadesign/goa"
 	"time"
 )
 
@@ -51,49 +50,26 @@ type busStopPayload struct {
 	Name      *string  `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
 }
 
-// Validate validates the busStopPayload type instance.
-func (ut *busStopPayload) Validate() (err error) {
-	if ut.Name == nil {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "name"))
-	}
-	if ut.Latitude == nil {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "latitude"))
-	}
-	if ut.Longitude == nil {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "longitude"))
-	}
-	return
-}
-
 // Publicize creates BusStopPayload from busStopPayload
 func (ut *busStopPayload) Publicize() *BusStopPayload {
 	var pub BusStopPayload
 	if ut.Latitude != nil {
-		pub.Latitude = *ut.Latitude
+		pub.Latitude = ut.Latitude
 	}
 	if ut.Longitude != nil {
-		pub.Longitude = *ut.Longitude
+		pub.Longitude = ut.Longitude
 	}
 	if ut.Name != nil {
-		pub.Name = *ut.Name
+		pub.Name = ut.Name
 	}
 	return &pub
 }
 
 // BusStopPayload user type.
 type BusStopPayload struct {
-	Latitude  float64 `form:"latitude" json:"latitude" xml:"latitude"`
-	Longitude float64 `form:"longitude" json:"longitude" xml:"longitude"`
-	Name      string  `form:"name" json:"name" xml:"name"`
-}
-
-// Validate validates the BusStopPayload type instance.
-func (ut *BusStopPayload) Validate() (err error) {
-	if ut.Name == "" {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "name"))
-	}
-
-	return
+	Latitude  *float64 `form:"latitude,omitempty" json:"latitude,omitempty" xml:"latitude,omitempty"`
+	Longitude *float64 `form:"longitude,omitempty" json:"longitude,omitempty" xml:"longitude,omitempty"`
+	Name      *string  `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
 }
 
 // geoJSON user type.

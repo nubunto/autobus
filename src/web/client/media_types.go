@@ -8,9 +8,10 @@
 //
 // The content of this file is auto-generated, DO NOT MODIFY
 
-package app
+package client
 
 import (
+	"net/http"
 	"time"
 )
 
@@ -21,6 +22,13 @@ type BusStopMedia struct {
 	ID   *int     `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
 	Loc  *GeoJSON `form:"loc,omitempty" json:"loc,omitempty" xml:"loc,omitempty"`
 	Name *string  `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
+}
+
+// DecodeBusStopMedia decodes the BusStopMedia instance encoded in resp body.
+func (c *Client) DecodeBusStopMedia(resp *http.Response) (*BusStopMedia, error) {
+	var decoded BusStopMedia
+	err := c.Decoder.Decode(&decoded, resp.Body, resp.Header.Get("Content-Type"))
+	return &decoded, err
 }
 
 // The GPS data media type (default view)
@@ -37,4 +45,11 @@ type GpsMedia struct {
 	Status    *string    `form:"status,omitempty" json:"status,omitempty" xml:"status,omitempty"`
 	Type      *string    `form:"type,omitempty" json:"type,omitempty" xml:"type,omitempty"`
 	Valid     *bool      `form:"valid,omitempty" json:"valid,omitempty" xml:"valid,omitempty"`
+}
+
+// DecodeGpsMedia decodes the GpsMedia instance encoded in resp body.
+func (c *Client) DecodeGpsMedia(resp *http.Response) (*GpsMedia, error) {
+	var decoded GpsMedia
+	err := c.Decoder.Decode(&decoded, resp.Body, resp.Header.Get("Content-Type"))
+	return &decoded, err
 }

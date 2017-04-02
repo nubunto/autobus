@@ -1,19 +1,22 @@
 version: "3.0"
 services:
+
   core:
     build:
       context: .
       dockerfile: Dockerfile.autobus-core
     links:
       - nats
-    environment:
-      - AUTOBUS_CORE_NATS_URL=nats://nats:4222
+    depends_on:
+      - nats
 
   web:
     build:
       context: .
       dockerfile: Dockerfile.autobus-web
     links:
+      - mongo
+    depends_on:
       - mongo
 
   platform:
@@ -23,11 +26,14 @@ services:
     links:
       - nats
       - mongo
-    environment:
-      - AUTOBUS_PLATFORM_NATS_URL=nats://nats:4222
+    depends_on:
+      - mongo
+      - nats
+      - core
 
   nats:
     image: nats:0.9.6
 
   mongo:
     image: mongo:3.0
+    

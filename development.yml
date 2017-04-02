@@ -3,15 +3,26 @@ services:
     core:
         ports:
             - "9009:9009"
+        environment:
+            AUTOBUS_CORE_NATS_URL: nats://nats:4222
+        # stupid mongodb takes forever to load up
+        restart: on-failure
+
     web:
         ports:
             - "8080:8080"
         environment:
             AUTOBUS_WEB_MONGO_URL: mongo:27017
-            AUTOBUS_WEB_HOST: 0.0.0.0:8080
+            AUTOBUS_WEB_HOST: localhost
+            AUTOBUS_WEB_LISTEN_ADDR: 0.0.0.0:8080
+        # stupid mongodb takes forever to load up
+        restart: on-failure
+
     platform:
         environment:
             AUTOBUS_PLATFORM_MONGO_URL: mongo:27017
+            AUTOBUS_PLATFORM_NATS_URL: nats://nats:4222
+        restart: on-failure
     mongo:
         # Expose the MongoDB port on development
         # So we can inspect it if necessary

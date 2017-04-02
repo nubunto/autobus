@@ -3,6 +3,73 @@ consumes:
 - application/xml
 - application/gob
 - application/x-gob
+definitions:
+  Bus-StopMedia:
+    description: The Bus Stop media type (default view)
+    example:
+      id: 7.089403e+17
+      loc:
+        coordinates:
+        - 0.9937187
+        - 0.9937187
+        type: Nobis in quia eveniet nihil.
+      name: Tenetur qui.
+    properties:
+      id:
+        example: 7.089403e+17
+        format: int64
+        type: integer
+      loc:
+        $ref: '#/definitions/GeoJSON'
+      name:
+        example: Tenetur qui.
+        type: string
+    title: 'Mediatype identifier: autobus.web.platform/bus-stop.media+json; view=default'
+    type: object
+  BusStopPayload:
+    example:
+      latitude: 0.5880026
+      longitude: 0.56719077
+      name: Nostrum voluptatum unde nostrum quam ut quae.
+    properties:
+      latitude:
+        example: 0.5880026
+        format: double
+        type: number
+      longitude:
+        example: 0.56719077
+        format: double
+        type: number
+      name:
+        example: Nostrum voluptatum unde nostrum quam ut quae.
+        type: string
+    required:
+    - name
+    - latitude
+    - longitude
+    title: BusStopPayload
+    type: object
+  GeoJSON:
+    example:
+      coordinates:
+      - 0.9937187
+      - 0.9937187
+      type: Nobis in quia eveniet nihil.
+    properties:
+      coordinates:
+        example:
+        - 0.9937187
+        - 0.9937187
+        items:
+          example: 0.9937187
+          format: double
+          type: number
+        type: array
+      type:
+        example: Nobis in quia eveniet nihil.
+        type: string
+    title: GeoJSON
+    type: object
 host: localhost
 info:
   description: The web platform for the Autobus Tracker
@@ -21,6 +88,64 @@ paths:
       summary: show GPS
       tags:
       - GPS
+  /stops:
+    get:
+      operationId: BusStop#nearest
+      parameters:
+      - in: query
+        name: latitude
+        required: true
+        type: number
+      - in: query
+        name: longitude
+        required: true
+        type: number
+      - description: distance in meters
+        in: query
+        name: radius
+        required: true
+        type: number
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+      schemes:
+      - http
+      summary: nearest BusStop
+      tags:
+      - BusStop
+    post:
+      operationId: BusStop#create
+      parameters:
+      - in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/BusStopPayload'
+      produces:
+      - autobus.web.platform/bus-stop.media+json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/Bus-StopMedia'
+      schemes:
+      - http
+      summary: create BusStop
+      tags:
+      - BusStop
+  /swagger.json:
+    get:
+      operationId: swagger#/swagger.json
+      responses:
+        "200":
+          description: File downloaded
+          schema:
+            type: file
+      schemes:
+      - http
+      summary: Download swagger/swagger.json
 produces:
 - application/json
 - application/xml

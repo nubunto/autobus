@@ -4,16 +4,25 @@ services:
         ports:
             - "9009:9009"
         restart: on-failure
+        environment:
+            AUTOBUS_CORE_NATS_URL: nats://nats:4222
+
     web:
         ports:
             - "80:80"
         environment:
             AUTOBUS_WEB_MONGO_URL: mongo:27017
-            AUTOBUS_WEB_HOST: 0.0.0.0:80
+            AUTOBUS_WEB_HOST: localhost
+            AUTOBUS_WEB_LISTEN_ADDR: 0.0.0.0:80
         restart: on-failure
+
     platform:
         environment:
             AUTOBUS_PLATFORM_MONGO_URL: mongo:27017
+            AUTOBUS_PLATFORM_NATS_URL: nats://nats:4222
         restart: on-failure
+
     mongo:
+        restart: always
+    nats:
         restart: always
