@@ -25,16 +25,17 @@ $ docker-compose -f docker-compose.yml -f development.yml up -d
 
 That's it!
 
-Of course, each binary can be run independently. Build with `$ gb build`, and run each one of the applications accordingly. Take a look at the Environment section to see the different env vars needed to run each project. Or, if you like digging, check out the `docker-compose.yml` and `development.yml` files.
+Of course, each binary can be run independently. Build with `$ gb build`, and run each one of the applications accordingly. Take a look at the Environment section to see the different env vars needed to run each project. Also, take a look at the Architecture section to see how the different applications interact with one another. Or, if you like digging, check out the `docker-compose.yml` and `development.yml` files. Be sure to check the differences between the `production.yml` and `development.yml` files.
 
 # Architecture
 
 - The `autobus-core` application opens up a TCP server at port 9009 by default.
-- When a GPS connects, it pushes data through the socket, which is then forwarded to the configured NATS, in the `gps.update` subject.
-  - The `autobus-platform` application forms a queue group under `queue.pgsql`, on the subject `gps.update`.
-  - The `autobus-platform` application can easily be scaled horizontally (see AUTOBUS_PLATFORM_HORIZONTAL) *and* vertically (start new ones, yay NATS!)
-  - The `autobus-platform`, then, with the payload received from `autobus-core` via the `gps.update` subject, (tries to) parse and inserts the GPS update on the underlying MongoDB database. There's a capped (2kb) collection for transient data, and a cold collection for further storage.
+- When a GPS connects, it pushes data through the socket, which is then forwarded to the configured NATS, in the `gps.update` subject. The message is forwarded untouched.
+  - The `autobus-platform` application forms a queue group under `queue.web.database`, on the subject `gps.update`.
+  - The `autobus-platform` application can easily be scaled horizontally (see `AUTOBUS_PLATFORM_HORIZONTAL`) *and* vertically (start new ones, yay NATS!)
+  - The `autobus-platform`, then, with the payload received from `autobus-core` via the `gps.update` subject, (tries to) parse and inserts the GPS update on the underlying MongoDB database. There's a capped (1kb, 500 documents) collection for transient data, and a cold collection for further storage.
 - The `autobus-web` application, when requested, access the MongoDB database, querying the GPS messages table.
+- The `autobus-web` application also creates bus stops through it's API.
 
 Whew! Hope you now have a clue on what the applications main responsibility is.
 
@@ -55,4 +56,4 @@ Whew! Hope you now have a clue on what the applications main responsibility is.
 
 ## Autobus Web
 - `AUTOBUS_WEB_HOST`: Sets the host for the API **and** where the server will listen to incoming requests.
-- `AUTOBUS_WEB_MONGO_URL`: Sets the PostgreSQL URL it will read from.
+- `AUTOBUS_WEB_MONGO_URL`: Sets the MongoDB URL it will read from.
