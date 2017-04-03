@@ -6,13 +6,13 @@ import (
 	"os/signal"
 	"strconv"
 
+	"domain"
+
 	_ "github.com/lib/pq"
 	"github.com/nats-io/nats"
 	"github.com/pkg/errors"
 	mgo "gopkg.in/mgo.v2"
 )
-
-const stupidDateTimeLayout = "020106150405"
 
 func createCappedCollection(session *mgo.Session) error {
 	transient := session.DB("autobus").C("gps_data_transient")
@@ -64,7 +64,7 @@ func main() {
 		go nc.QueueSubscribe("gps.update", "queue.web.database", func(m *nats.Msg) {
 			log.Println("Got message:", m.Data, "length:", len(m.Data))
 
-			var parsed Message
+			var parsed domain.GPSMessage
 			if err := parsed.UnmarshalText(m.Data); err != nil {
 				logger.Println("[ERROR] error while parsing the gps message: ", err)
 				return
