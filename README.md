@@ -4,6 +4,17 @@ This is Autobus, a suite of applications who are destined to forever gather info
 
 # Running
 
+## Attached Resources
+
+If in doubt what a attached resource is, [read this](https://12factor.net/backing-services).
+
+- [Nats](https://nats.io)
+- [MongoDB](https://mongodb.org)
+
+Installation of those is critical for running the application **without** `docker-compose`. If you do decide to use `docker-compose`, then there is no need to install any attached resource.
+
+However, running Nats and MongoDB locally can give you greater control and inspection.
+
 You're in for a treat!
 
 First, install `go`, `gb`, `docker` and `docker-compose`. You really can't do anything without these.
