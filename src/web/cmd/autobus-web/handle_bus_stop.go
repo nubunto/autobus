@@ -75,7 +75,6 @@ func handleCreateStop(e *Env) httptreemux.HandlerFunc {
 			OK:      true,
 			Message: "Created successfully",
 			Status:  http.StatusCreated,
-			Data:    doc,
 		}.EncodeTo(w)
 	})
 }

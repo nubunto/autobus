@@ -54,7 +54,7 @@ func (msg *GPSMessage) UnmarshalText(raw []byte) (err error) {
 	valid := parts[4]
 	if "A" == valid {
 		msg.Valid = true
-	} else if "S" == valid {
+	} else if "V" == valid {
 		msg.Valid = false
 	} else {
 		return errors.Errorf("error decoding valid (raw: %s)", valid)

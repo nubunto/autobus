@@ -68,3 +68,72 @@ Whew! Hope you now have a clue on what the applications main responsibility is.
 ## Autobus Web
 - `AUTOBUS_WEB_HOST`: Sets the host for the API **and** where the server will listen to incoming requests.
 - `AUTOBUS_WEB_MONGO_URL`: Sets the MongoDB URL it will read from.
+
+# Applications
+
+## The Web API, schemas, that sort of thing
+
+Note: represented as JSON for example values, each top level element represents a MongoDB collection.
+This is the current version.
+
+```
+{
+	stops: [
+		{
+			_id: ObjectID("hex"),
+			name: "Santa Cruz",
+			location: {
+				type: "Point",
+				coordinates: [150, 20]
+			}
+		}
+	],
+
+	gps_data_transient: [ /* gps data that is NOT long-lived */ ],
+	gps_data: [ /* gps data that IS long lived */ ]
+}
+```
+
+In the next implementations, we're aiming for this:
+
+```
+{
+	// stops represent the bus stops along a path.
+	// each line has n stops.
+	stops: [
+		{
+			_id: "8abf716348cfd",
+			name: "Santa Cruz",
+			address: "RUA JOSE MARGARIDO COSTA",
+			location: {
+				type: "Point",
+				coordinates: [-143.4183747, 22.88463]
+			}
+		}
+	],
+
+	// a line represents a entity that encompasses N buses.
+	lines: [
+		{
+			_id: "81737471874",
+			hours: ["08:00", "09:00"],
+			stops: [
+				{_id: "8abf716348cfd"}
+			],
+			route: {
+				type: "MultiLineString",
+				coordinates: [
+					[-22, -44],
+					[-22, -44],
+					[-22, -44],
+					[-22, -44],
+					[-22, -44]
+				]
+			}
+		}
+	],
+
+	gps_data_transient: [ /* gps data that is NOT long-lived */ ],
+	gps_data: [ /* gps data that IS long lived */ ]
+}
+```
