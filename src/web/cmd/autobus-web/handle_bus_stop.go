@@ -23,9 +23,9 @@ func (b *busStopPayload) Decode(r io.Reader) error {
 }
 
 type busStopResp struct {
-	ID       bson.ObjectId
-	Name     string `json:"name"`
-	Location busStopRespLocation
+	ID       bson.ObjectId       `json:"id"`
+	Name     string              `json:"name"`
+	Location busStopRespLocation `json:"location"`
 }
 
 type busStopRespLocation struct {
@@ -80,7 +80,7 @@ func handleCreateStop(e *Env) httptreemux.HandlerFunc {
 	})
 }
 
-func parseFloat(f string, w http.ResponseWriter) (p float64, errorFound bool) {
+func parseFloatOrStreamError(f string, w http.ResponseWriter) (p float64, errorFound bool) {
 	var err error
 	p, err = strconv.ParseFloat(f, 64)
 	if err != nil {
@@ -93,17 +93,17 @@ func parseFloat(f string, w http.ResponseWriter) (p float64, errorFound bool) {
 func handleGetStops(e *Env) httptreemux.HandlerFunc {
 	return httptreemux.HandlerFunc(func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		query := r.URL.Query()
-		radius, stop := parseFloat(query.Get("radius"), w)
+		radius, stop := parseFloatOrStreamError(query.Get("radius"), w)
 		if stop {
 			return
 		}
 
-		latitude, stop := parseFloat(query.Get("latitude"), w)
+		latitude, stop := parseFloatOrStreamError(query.Get("latitude"), w)
 		if stop {
 			return
 		}
 
-		longitude, stop := parseFloat(query.Get("longitude"), w)
+		longitude, stop := parseFloatOrStreamError(query.Get("longitude"), w)
 		if stop {
 			return
 		}
