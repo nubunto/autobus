@@ -131,7 +131,8 @@ func (h *hub) Start() error {
 	h.listener = ln
 
 	h.WaitGroup = new(sync.WaitGroup)
-	h.WaitGroup.Add(h.acceptGoroutines + h.handlerGoroutines)
+	// accept + handlers + the intercept goroutine
+	h.WaitGroup.Add(h.acceptGoroutines + h.handlerGoroutines + 1)
 
 	for i := 0; i < h.acceptGoroutines; i++ {
 		go h.accept()
@@ -161,12 +162,14 @@ func (h *hub) openHandlers() {
 	for conn := range h.conns {
 		for {
 			msg := make([]byte, 256)
-			if _, err := conn.Read(msg); err != nil {
+			var n int
+			var err error
+			if n, err = conn.Read(msg); err != nil {
 				h.err <- err
 				conn.Close()
 				break
 			}
-			ret, err := h.Protocol.HandleMessage(msg)
+			ret, err := h.Protocol.HandleMessage(msg[:n])
 			if err != nil {
 				h.logDebug("Dropping this message. Reason:", err)
 				continue
@@ -192,6 +195,7 @@ func (h *hub) interceptErrors() {
 			h.Println("Got error:", err)
 		}
 	}
+	h.WaitGroup.Done()
 }
 
 func (h *hub) logDebug(args ...interface{}) {
