@@ -1,0 +1,25 @@
+image: golang:latest
+
+
+before_script:
+    - go get github.com/constabulary/gb/...
+
+stages:
+    - test
+    - build
+
+format:
+    stage: test
+    script:
+        - gb test -race
+
+compile:
+    stage: build
+    script:
+        - sh build.sh
+    artifacts:
+        paths:
+            - bin/autobus-core
+            - bin/autobus-web
+            - bin/autobus-platform
+
