@@ -25,6 +25,9 @@ func (r Response) EncodeTo(w io.Writer) error {
 			}
 		}
 	}
+	if r.Message == "" && r.Status != 0 {
+		r.Message = http.StatusText(r.Status)
+	}
 	return json.NewEncoder(w).Encode(r)
 }
 

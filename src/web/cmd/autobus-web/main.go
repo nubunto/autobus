@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/dimfeld/httptreemux"
+	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	mgo "gopkg.in/mgo.v2"
@@ -52,7 +52,7 @@ func (e *Env) ensureIndex(collection, index string) {
 }
 
 func main() {
-	logger, err := zap.NewProduction()
+	logger, err := zap.NewDevelopment()
 	if err != nil {
 		panic(err)
 	}
@@ -71,12 +71,14 @@ func main() {
 
 	env.ensureIndex("stops", "$2dsphere:location")
 
-	sugar.Infow("mounting routes")
-	mux := httptreemux.New()
+	mux := httprouter.New()
 	mux.GET("/gps", handleGetGPS(env))
+
 	mux.POST("/stops", handleCreateStop(env))
 	mux.GET("/stops", handleGetStops(env))
-	sugar.Infow("done mounting routes")
+
+	mux.GET("/lines", handleGetLines(env))
+	mux.POST("/lines", handleCreateLine(env))
 
 	listenAddr := os.Getenv("AUTOBUS_WEB_LISTEN_ADDR")
 	sugar.Infow("preparing to listen", "address", listenAddr)

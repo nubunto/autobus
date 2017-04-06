@@ -32,12 +32,6 @@
 			"branch": "master"
 		},
 		{
-			"importpath": "github.com/dimfeld/httptreemux",
-			"repository": "https://github.com/dimfeld/httptreemux",
-			"revision": "86f7c217d9043ebc6adfd8e2ed04a0bb1e1db651",
-			"branch": "master"
-		},
-		{
 			"importpath": "github.com/go-kit/kit/log",
 			"repository": "https://github.com/go-kit/kit",
 			"revision": "5d93a23737003ed3ad90359f0aeb25e08dfdf547",
@@ -80,6 +74,12 @@
 			"importpath": "github.com/inconshreveable/log15",
 			"repository": "https://github.com/inconshreveable/log15",
 			"revision": "39bacc234bf1afd0b68573e95b45871f67ba2cd4",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/julienschmidt/httprouter",
+			"repository": "https://github.com/julienschmidt/httprouter",
+			"revision": "6f3f3919c8781ce5c0509c83fffc887a7830c938",
 			"branch": "master"
 		},
 		{

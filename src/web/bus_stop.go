@@ -5,8 +5,8 @@ import (
 )
 
 type BusStop struct {
-	ID       bson.ObjectId
-	Name     string `json:"name"`
+	ID       bson.ObjectId `json:"id" bson:"_id"`
+	Name     string        `json:"name"`
 	Location BusStopLocation
 }
 

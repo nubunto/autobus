@@ -5,9 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/julienschmidt/httprouter"
 	"web"
-
-	"github.com/dimfeld/httptreemux"
 )
 
 type gpsResp struct {
@@ -41,8 +40,8 @@ type gpsLocation struct {
 	Longitude float64 `json:"longitude"`
 }
 
-func handleGetGPS(e *Env) httptreemux.HandlerFunc {
-	return httptreemux.HandlerFunc(func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+func handleGetGPS(e *Env) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		transient := e.DB("autobus").C("gps_data_transient")
 		all := make([]*gpsResp, 0)
 		raw := make([]domain.GPSMessage, 0)
@@ -60,5 +59,5 @@ func handleGetGPS(e *Env) httptreemux.HandlerFunc {
 			Message: "OK",
 			Data:    all,
 		}.EncodeTo(w)
-	})
+	}
 }

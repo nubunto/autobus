@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"web"
 
-	"github.com/dimfeld/httptreemux"
+	"github.com/julienschmidt/httprouter"
 	"go.uber.org/zap"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -48,17 +48,16 @@ func toBusStopResp(b []web.BusStop) []busStopResp {
 	return ret
 }
 
-func handleCreateStop(e *Env) httptreemux.HandlerFunc {
-	return httptreemux.HandlerFunc(func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+func handleCreateStop(e *Env) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		e.Debug("creating bus stop")
 		var payload busStopPayload
 		if err := payload.Decode(r.Body); err != nil {
 			web.ErrorResponse(w, err, http.StatusBadRequest)
-			e.Debug("error decoding the payload", zap.Error(err))
+			e.Error("error decoding the payload", zap.Error(err))
 			return
 		}
 		doc := web.BusStop{
-			ID:   bson.NewObjectId(),
 			Name: payload.Name,
 			Location: web.BusStopLocation{
 				Type:        "Point",
@@ -68,15 +67,14 @@ func handleCreateStop(e *Env) httptreemux.HandlerFunc {
 		stops := e.DB("autobus").C("stops")
 		if err := stops.Insert(doc); err != nil {
 			web.ErrorResponse(w, err, http.StatusInternalServerError)
-			e.Debug("error inserting bus stop", zap.Error(err))
+			e.Error("error inserting bus stop", zap.Error(err))
 			return
 		}
 		web.Response{
-			OK:      true,
-			Message: "Created successfully",
-			Status:  http.StatusCreated,
+			OK:     true,
+			Status: http.StatusCreated,
 		}.EncodeTo(w)
-	})
+	}
 }
 
 func parseFloatOrStreamError(f string, w http.ResponseWriter) (p float64, errorFound bool) {
@@ -89,8 +87,8 @@ func parseFloatOrStreamError(f string, w http.ResponseWriter) (p float64, errorF
 	return
 }
 
-func handleGetStops(e *Env) httptreemux.HandlerFunc {
-	return httptreemux.HandlerFunc(func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+func handleGetStops(e *Env) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		query := r.URL.Query()
 		radius, stop := parseFloatOrStreamError(query.Get("radius"), w)
 		if stop {
@@ -125,9 +123,8 @@ func handleGetStops(e *Env) httptreemux.HandlerFunc {
 		}
 
 		web.Response{
-			OK:      true,
-			Message: "Retrieved successfully",
-			Data:    toBusStopResp(all),
+			OK:   true,
+			Data: toBusStopResp(all),
 		}.EncodeTo(w)
-	})
+	}
 }
