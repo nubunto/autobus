@@ -5,12 +5,16 @@ import (
 	"os"
 )
 
+var Version string
+
 func main() {
 	hubLogger := log.New(os.Stdout, "hub ", log.LstdFlags)
 	np, err := NewNatsProtocol(os.Getenv("AUTOBUS_CORE_NATS_URL"))
 	if err != nil {
 		panic(err)
 	}
+
+	hubLogger.Println("Version:", Version)
 
 	h, err := NewHub(hubLogger,
 		DebugFromEnv("AUTOBUS_CORE_DEBUG"),

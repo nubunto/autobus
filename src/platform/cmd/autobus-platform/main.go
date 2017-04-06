@@ -26,6 +26,8 @@ func createCappedCollection(session *mgo.Session) error {
 	return nil
 }
 
+var Version string
+
 func main() {
 	var horizontalConcurrency int
 	concurrencyStr, exists := os.LookupEnv("AUTOBUS_PLATFORM_HORIZONTAL")
@@ -36,6 +38,8 @@ func main() {
 	}
 
 	logger := log.New(os.Stdout, "autobus-platform: ", log.LstdFlags)
+
+	logger.Println("Version:", Version)
 
 	natsURL := os.Getenv("AUTOBUS_PLATFORM_NATS_URL")
 	logger.Println("Connecting to nats @", natsURL)
