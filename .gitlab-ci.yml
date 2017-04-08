@@ -7,6 +7,7 @@ before_script:
 stages:
     - test
     - build
+    - deploy
 
 format:
     stage: test
@@ -17,9 +18,14 @@ compile:
     stage: build
     script:
         - sh build.sh
-    artifacts:
-        paths:
-            - bin/autobus-core
-            - bin/autobus-web
-            - bin/autobus-platform
+
+deploy_production:
+    stage: deploy
+    script:
+        - ls -lah
+        - docker-compose -f docker-compose.yml -f production.yml build
+        - docker-compose -f docker-compose.yml -f production.yml up -d
+    environment:
+        name: production
+    only: master
 
