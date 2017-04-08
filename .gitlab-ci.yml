@@ -11,7 +11,7 @@ stages:
 format:
     stage: test
     script:
-        - gb test -race
+        - gb test -race -v
 
 compile:
     stage: build
