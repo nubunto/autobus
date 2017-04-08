@@ -1,7 +1,7 @@
-image: golang:1.8
-
-
 before_script:
+    - export GOPATH=$HOME/go
+    - export GOROOT=/usr/bin/go
+    - export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
     - go get github.com/constabulary/gb/...
 
 stages:
@@ -29,4 +29,3 @@ deploy_production:
         name: production
     only:
         - master
-
