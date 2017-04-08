@@ -1,13 +1,12 @@
 package main
 
 import (
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	mgo "gopkg.in/mgo.v2"
+	"web"
 )
 
 type Env struct {
-	*mgo.Session
+	web.Backend
 	*zap.Logger
 }
 
@@ -21,17 +20,9 @@ func NewEnv(options ...func(*Env) error) (*Env, error) {
 	return e, nil
 }
 
-func DialDB(db string) func(*Env) error {
+func SetBackend(backend web.Backend) func(*Env) error {
 	return func(e *Env) error {
-		if db == "" {
-			return errors.New("DB address can't be blank")
-		}
-
-		session, err := mgo.Dial(db)
-		if err != nil {
-			return errors.Wrap(err, "error when dialing db")
-		}
-		e.Session = session
+		e.Backend = backend
 		return nil
 	}
 }
@@ -41,8 +32,4 @@ func SetLogger(l *zap.Logger) func(*Env) error {
 		e.Logger = l
 		return nil
 	}
-}
-
-func (e *Env) ensureIndex(collection, index string) {
-	e.DB("autobus").C(collection).EnsureIndexKey(index)
 }

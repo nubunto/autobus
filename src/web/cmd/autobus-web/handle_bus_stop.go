@@ -8,7 +8,6 @@ import (
 	"web"
 
 	"github.com/julienschmidt/httprouter"
-	"go.uber.org/zap"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -51,10 +50,11 @@ func toBusStopResp(b []web.BusStop) []busStopResp {
 func handleCreateStop(e *Env) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		e.Debug("creating bus stop")
+		stops := e.Backend.Stops()
+
 		var payload busStopPayload
 		if err := payload.Decode(r.Body); err != nil {
 			web.ErrorResponse(w, err, http.StatusBadRequest)
-			e.Error("error decoding the payload", zap.Error(err))
 			return
 		}
 		doc := web.BusStop{
@@ -64,10 +64,8 @@ func handleCreateStop(e *Env) httprouter.Handle {
 				Coordinates: []float64{payload.Longitude, payload.Latitude},
 			},
 		}
-		stops := e.DB("autobus").C("stops")
-		if err := stops.Insert(doc); err != nil {
+		if err := stops.Create(doc); err != nil {
 			web.ErrorResponse(w, err, http.StatusInternalServerError)
-			e.Error("error inserting bus stop", zap.Error(err))
 			return
 		}
 		web.Response{
@@ -105,9 +103,8 @@ func handleGetStops(e *Env) httprouter.Handle {
 			return
 		}
 
-		all := make([]web.BusStop, 0)
-		stops := e.DB("autobus").C("stops")
-		if err := stops.Find(bson.M{
+		stops := e.Backend.Stops()
+		all, err := stops.GetAll(bson.M{
 			"location": bson.M{
 				"$near": bson.M{
 					"$geometry": bson.M{
@@ -117,7 +114,8 @@ func handleGetStops(e *Env) httprouter.Handle {
 					"$maxDistance": radius,
 				},
 			},
-		}).All(&all); err != nil {
+		})
+		if err != nil {
 			web.ErrorResponse(w, err, http.StatusInternalServerError)
 			return
 		}

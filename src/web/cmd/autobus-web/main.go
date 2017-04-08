@@ -4,6 +4,9 @@ import (
 	"net/http"
 	"os"
 
+	mgo "gopkg.in/mgo.v2"
+	"web"
+
 	"github.com/julienschmidt/httprouter"
 	"go.uber.org/zap"
 )
@@ -21,18 +24,24 @@ func main() {
 	dbURL := os.Getenv("AUTOBUS_WEB_MONGO_URL")
 
 	sugar.Infow("connecting to db", "address", dbURL)
+	session, err := mgo.Dial(dbURL)
+	if err != nil {
+		panic(err)
+	}
+
+	mongoBackend := web.NewMongoBackend(session)
+	defer mongoBackend.Close()
+
 	env, err := NewEnv(
-		DialDB(dbURL),
 		SetLogger(logger),
+		SetBackend(mongoBackend),
 	)
 	if err != nil {
 		panic(err)
 	}
 
-	env.ensureIndex("stops", "$2dsphere:location")
-
 	mux := httprouter.New()
-	mux.GET("/gps", handleGetGPS(env))
+	//mux.GET("/gps", handleGetGPS(env))
 
 	mux.POST("/stops", handleCreateStop(env))
 	mux.GET("/stops", handleGetStops(env))
