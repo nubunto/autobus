@@ -1,5 +1,7 @@
 # The Autobus Application
 
+[![build status](https://gitlab.com/autobus/autobus/badges/master/build.svg)](https://gitlab.com/autobus/autobus/commits/master)
+
 This is Autobus, a suite of applications who are destined to forever gather information about many GPSs.
 
 # Running
