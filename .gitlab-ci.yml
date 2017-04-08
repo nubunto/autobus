@@ -18,6 +18,11 @@ compile:
     stage: build
     script:
         - sh build.sh
+    artifacts:
+        paths:
+            - bin/autobus-core
+            - bin/autobus-platform
+            - bin/autobus-web
 
 deploy_production:
     stage: deploy
