@@ -17,17 +17,13 @@ format:
 compile:
     stage: build
     script:
-        - sh build.sh
-    artifacts:
-        paths:
-            - bin/autobus-core
-            - bin/autobus-platform
-            - bin/autobus-web
+        - gb build
 
 deploy_production:
     stage: deploy
     script:
-        - ls -lah
+        - sh build.sh
+        - ls bin
         - docker-compose -f docker-compose.yml -f production.yml build
         - docker-compose -f docker-compose.yml -f production.yml up -d
     environment:
