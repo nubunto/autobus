@@ -44,10 +44,9 @@ func (lp *linePayload) Decode(r io.Reader) error {
 
 func handleGetLines(e *Env) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		lines := e.DB("autobus").C("lines")
-		var all []web.Line
+		lines := e.Backend.Lines()
 
-		var finder bson.M
+		finder := make(bson.M, 1)
 		query := r.URL.Query()
 
 		if stopID := query.Get("stop_id"); stopID != "" {
@@ -56,7 +55,8 @@ func handleGetLines(e *Env) httprouter.Handle {
 			}
 		}
 
-		if err := lines.Find(finder).All(&all); err != nil {
+		all, err := lines.GetAll(finder)
+		if err != nil {
 			web.ErrorResponse(w, err, http.StatusInternalServerError)
 			return
 		}
@@ -71,7 +71,8 @@ func handleGetLines(e *Env) httprouter.Handle {
 
 func handleCreateLine(e *Env) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		lines := e.DB("autobus").C("lines")
+		lines := e.Backend.Lines()
+
 		var payload linePayload
 		if err := payload.Decode(r.Body); err != nil {
 			web.ErrorResponse(w, err, http.StatusBadRequest)
@@ -84,7 +85,7 @@ func handleCreateLine(e *Env) httprouter.Handle {
 			Stops: payload.Stops.toStopID(),
 			// TODO: routes
 		}
-		if err := lines.Insert(doc); err != nil {
+		if err := lines.Create(doc); err != nil {
 			web.ErrorResponse(w, err, http.StatusInternalServerError)
 			return
 		}

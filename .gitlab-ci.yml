@@ -1,0 +1,32 @@
+image: golang:1.8
+
+
+before_script:
+    - go get github.com/constabulary/gb/...
+
+stages:
+    - test
+    - build
+    - deploy
+
+format:
+    stage: test
+    script:
+        - gb test -race -v
+
+compile:
+    stage: build
+    script:
+        - sh build.sh
+
+deploy_production:
+    stage: deploy
+    script:
+        - ls -lah
+        - docker-compose -f docker-compose.yml -f production.yml build
+        - docker-compose -f docker-compose.yml -f production.yml up -d
+    environment:
+        name: production
+    only:
+        - master
+

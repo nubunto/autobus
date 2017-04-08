@@ -1,5 +1,7 @@
 # The Autobus Application
 
+[![build status](https://gitlab.com/autobus/autobus/badges/master/build.svg)](https://gitlab.com/autobus/autobus/commits/master)
+
 This is Autobus, a suite of applications who are destined to forever gather information about many GPSs.
 
 # Running
@@ -62,7 +64,7 @@ Whew! Hope you now have a clue on what the applications main responsibility is.
 
 ## Autobus Platform
 - `AUTOBUS_PLATFORM_HORIZONTAL`: Tweaks the number of goroutines that register callbacks on the NATS client. Tweaking this should parallellize the queue output rate, but this also increases the load on the database. Discretion is advised. Default is 1024.
-- `AUTOBUS_PLATFORM_NATS_URL`: The NATS URL the platform will listen messages in. Should be the same subject name as Autobus Core. The queue group name is `queue.pgsql`.
+- `AUTOBUS_PLATFORM_NATS_URL`: The NATS URL the platform will listen messages in.
 - `AUTOBUS_PLATFORM_MONGO_URL`: The MongoDB servers it will insert GPS messages into. TODO: more details on the schema.
 
 ## Autobus Web
