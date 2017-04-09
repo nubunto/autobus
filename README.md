@@ -83,7 +83,7 @@ Whew! Hope you now have a clue on what the applications main responsibility is.
 
 - `AUTOBUS_CORE_NATS_URL`: The NATS URL the Core will publish messages to. The subject name is `gps.update`.
 - `AUTOBUS_CORE_DEBUG`: Enables debugging.
-- `AUTOBUS_TCP_HOST`: Changes the TCP host. Default is `0.0.0.0:9009`
+- `AUTOBUS_CORE_TCP_HOST`: Changes the TCP host. Default is `0.0.0.0:9009`
 - `AUTOBUS_CORE_HANDLERS`: Tweaks client concurrency. The number of handlers is, in effect, the total numbers of connected clients the Hub can hold before buffering subsequent connections. You should increase this if the number of clients go higher. Default is 2048. (10k concurrent connections should be fine, given the server is able to handle that. Expect memory issues only with extreme concurrency/spikes)
 - `AUTOBUS_CORE_ACCEPT`: Effectively, the number of concurrent goroutines accepting connections. Tweak this _should_ make clients be accepted faster; discretion is advised, though. Default is 1024.
 
