@@ -21,6 +21,8 @@ compile:
 
 deploy_production:
     stage: deploy
+    tags:
+        - autobus-production
     script:
         - sh build.sh
         - docker-compose -f docker-compose.yml -f production.yml build
@@ -29,3 +31,16 @@ deploy_production:
         name: production
     only:
         - master
+
+deploy_staging:
+    stage: deploy
+    tags:
+        - autobus-staging
+    script:
+        - sh build.sh
+        - docker-compose -f docker-compose.yml -f production.yml build
+        - docker-compose -f docker-compose.yml -f production.yml up -d
+    environment:
+        name: staging
+    only:
+        - develop
