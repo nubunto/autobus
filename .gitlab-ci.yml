@@ -17,13 +17,12 @@ format:
 compile:
     stage: build
     script:
-        - gb build
+        - sh build.sh
 
 deploy_production:
     stage: deploy
     script:
         - sh build.sh
-        - ls bin
         - docker-compose -f docker-compose.yml -f production.yml build
         - docker-compose -f docker-compose.yml -f production.yml up -d
     environment:

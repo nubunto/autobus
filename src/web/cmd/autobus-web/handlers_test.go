@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -35,6 +36,7 @@ func TestHandlers(t *testing.T) {
 		name    string
 		method  string
 		path    string
+		query   string
 		env     *Env
 		handler func(*Env) httprouter.Handle
 		payload io.Reader
@@ -78,6 +80,74 @@ func TestHandlers(t *testing.T) {
 				}
 			},
 		},
+
+		{
+			name:   "CreateBusStop",
+			method: "POST",
+			path:   "/stops",
+			env:    newEnvWithMockedMongoBackend(),
+			payload: strings.NewReader(`
+				{
+					"name": "Sherlock Holmes stop",
+					"address": "221b Baker Street",
+					"latitude": -24.98329,
+					"longitude": 87.87393
+				}
+			`),
+			handler: handleCreateStop,
+			assert: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				if rec.Code != http.StatusCreated {
+					t.Errorf("should have status code %d (%s), has %d (%s)",
+						http.StatusCreated, http.StatusText(http.StatusCreated),
+						rec.Code, http.StatusText(rec.Code))
+				}
+			},
+		},
+
+		{
+			name:    "GetBusStop",
+			method:  "GET",
+			path:    "/stops",
+			query:   "latitude=1&longitude=2&radius=10",
+			env:     newEnvWithMockedMongoBackend(),
+			handler: handleGetStops,
+			assert: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				if rec.Code != http.StatusOK {
+					t.Errorf("should have status code %d (%s), has %d (%s)",
+						http.StatusOK, http.StatusText(http.StatusOK),
+						rec.Code, http.StatusText(rec.Code))
+				}
+				var response web.Response
+				if err := json.Unmarshal(rec.Body.Bytes(), &response); err != nil {
+					t.Error("response should be valid JSON, instead got error:", err)
+				}
+				if !response.OK {
+					t.Error("response should be ok")
+				}
+			},
+		},
+
+		{
+			name:    "GetBusStopNoParams",
+			method:  "GET",
+			path:    "/stops",
+			env:     newEnvWithMockedMongoBackend(),
+			handler: handleGetStops,
+			assert: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				if rec.Code != http.StatusBadRequest {
+					t.Errorf("should have status code %d (%s), has %d (%s)",
+						http.StatusBadRequest, http.StatusText(http.StatusBadRequest),
+						rec.Code, http.StatusText(rec.Code))
+				}
+				var response web.Response
+				if err := json.Unmarshal(rec.Body.Bytes(), &response); err != nil {
+					t.Error("response should be valid JSON, instead got error:", err)
+				}
+				if response.OK {
+					t.Error("response should be not be ok")
+				}
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -87,7 +157,7 @@ func TestHandlers(t *testing.T) {
 			mux := httprouter.New()
 			mux.Handle(test.method, test.path, test.handler(test.env))
 
-			req := httptest.NewRequest(test.method, "http://example.com"+test.path, test.payload)
+			req := httptest.NewRequest(test.method, "http://example.com"+test.path+"?"+test.query, test.payload)
 			w := httptest.NewRecorder()
 
 			mux.ServeHTTP(w, req)

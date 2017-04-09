@@ -18,7 +18,7 @@ func main() {
 
 	h, err := NewHub(hubLogger,
 		DebugFromEnv("AUTOBUS_CORE_DEBUG"),
-		ListenFromEnv("AUTOBUS_TCP_HOST"),
+		ListenFromEnv("AUTOBUS_CORE_TCP_HOST"),
 		AcceptGoroutinesFromEnv("AUTOBUS_CORE_ACCEPT"),
 		HandlerGoroutinesFromEnv("AUTOBUS_CORE_HANDLERS"),
 		WithProtocol(np),

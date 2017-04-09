@@ -15,19 +15,29 @@ If in doubt what a attached resource is, [read this](https://12factor.net/backin
 
 Installation of those is critical for running the application **without** `docker-compose`. If you do decide to use `docker-compose`, then there is no need to install any attached resource.
 
+## Other tools
+
+These are mandatory:
+
+- [Go](https://golang.org)
+- [gb](https://getgb.io)
+
+
 However, running Nats and MongoDB locally can give you greater control and inspection.
 
-You're in for a treat!
+## Docker Compose
 
-First, install `go`, `gb`, `docker` and `docker-compose`. You really can't do anything without these.
+The applications are used in production with `docker-compose`, so to test how it behaves is essential, **especially** when delivering a new release.
 
-Well, you _can_ leave out `docker` and `docker-compose`, but running a entire stack with one command is really appealing.
+For development purposes, it is no more than a convenience, although I encourage you to use it just so we can get a environment that resembles the production one.
 
 Next, clone this repository and, in the root folder, do:
 
 ```
-$ GOOS=linux gb build
+$ sh build.sh
 ```
+
+The `build.sh` script statically links all the applications inside `src`, and puts them inside `bin/`.
 
 Next, you can bring the whole environment up with `docker-compose`. Just apply the correct .yml files, in the right order:
 
@@ -38,7 +48,22 @@ $ docker-compose -f docker-compose.yml -f development.yml up -d
 
 That's it!
 
-Of course, each binary can be run independently. Build with `$ gb build`, and run each one of the applications accordingly. Take a look at the Environment section to see the different env vars needed to run each project. Also, take a look at the Architecture section to see how the different applications interact with one another. Or, if you like digging, check out the `docker-compose.yml` and `development.yml` files. Be sure to check the differences between the `production.yml` and `development.yml` files.
+## Running without Docker Compose
+
+
+You can also run each application by your own. This is useful when not testing out the entire flow, but rather a part of it (e.g. changing the web API)
+
+Run:
+
+```
+gb build
+```
+
+This will compile all applications and put them inside `bin/`, but they are not statically linked.
+
+You can then run each one of the applications accordingly. Take a look at the Environment section to see the different env vars needed to run each project.
+
+Also, take a look at the Architecture section to see how the different applications interact with one another.
 
 # Architecture
 
@@ -58,7 +83,7 @@ Whew! Hope you now have a clue on what the applications main responsibility is.
 
 - `AUTOBUS_CORE_NATS_URL`: The NATS URL the Core will publish messages to. The subject name is `gps.update`.
 - `AUTOBUS_CORE_DEBUG`: Enables debugging.
-- `AUTOBUS_TCP_HOST`: Changes the TCP host. Default is `0.0.0.0:9009`
+- `AUTOBUS_CORE_TCP_HOST`: Changes the TCP host. Default is `0.0.0.0:9009`
 - `AUTOBUS_CORE_HANDLERS`: Tweaks client concurrency. The number of handlers is, in effect, the total numbers of connected clients the Hub can hold before buffering subsequent connections. You should increase this if the number of clients go higher. Default is 2048. (10k concurrent connections should be fine, given the server is able to handle that. Expect memory issues only with extreme concurrency/spikes)
 - `AUTOBUS_CORE_ACCEPT`: Effectively, the number of concurrent goroutines accepting connections. Tweak this _should_ make clients be accepted faster; discretion is advised, though. Default is 1024.
 
@@ -77,26 +102,6 @@ Whew! Hope you now have a clue on what the applications main responsibility is.
 
 Note: represented as JSON for example values, each top level element represents a MongoDB collection.
 This is the current version.
-
-```
-{
-	stops: [
-		{
-			_id: ObjectID("hex"),
-			name: "Santa Cruz",
-			location: {
-				type: "Point",
-				coordinates: [150, 20]
-			}
-		}
-	],
-
-	gps_data_transient: [ /* gps data that is NOT long-lived */ ],
-	gps_data: [ /* gps data that IS long lived */ ]
-}
-```
-
-In the next implementations, we're aiming for this:
 
 ```
 {
@@ -133,9 +138,17 @@ In the next implementations, we're aiming for this:
 				]
 			}
 		}
-	],
-
-	gps_data_transient: [ /* gps data that is NOT long-lived */ ],
-	gps_data: [ /* gps data that IS long lived */ ]
+	]
 }
 ```
+
+## Routes
+
+- `POST /lines`: creates a new line
+- `GET /lines[stop_id]`: Retrieves all the lines, or, if the `stop_id` param is present, returns the lines that contain said stop.
+- `POST /stops`: creates a new bus stop
+- `GET /stops?latitude=1&longitude=2&radius=100`: returns all the stop within the geographical coordinates denominated by the `latitude`, `longitude`, and `radius`. All arguments are mandatory. Not supplying them results in a BadRequest.
+
+## Future of the Web API
+
+- We need to expose public GPS data (from the actual buses running around city) through this same API. The MongoDB Collection for hot, recent data is `gps_data_transient`. It has a 1kb/500 document limit (memory purposes). The cold, long-term storage one is `gps_data`. These are kept for at least 6 months.
