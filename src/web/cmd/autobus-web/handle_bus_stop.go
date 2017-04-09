@@ -49,7 +49,6 @@ func toBusStopResp(b []web.BusStop) []busStopResp {
 
 func handleCreateStop(e *Env) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		e.Debug("creating bus stop")
 		stops := e.Backend.Stops()
 
 		var payload busStopPayload
