@@ -46,25 +46,36 @@ func handleGetLines(e *Env) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		lines := e.Backend.Lines()
 
-		finder := make(bson.M, 1)
-		query := r.URL.Query()
-
-		if stopID := query.Get("stop_id"); stopID != "" {
-			finder["stops"] = bson.M{
-				"_id": stopID,
-			}
-		}
-
-		all, err := lines.GetAll(finder)
+		all, err := lines.GetAll(nil)
 		if err != nil {
 			web.ErrorResponse(w, err, http.StatusInternalServerError)
 			return
 		}
 
 		web.Response{
-			OK:      true,
-			Message: "Retrieved lines successfully",
-			Data:    all,
+			OK:   true,
+			Data: all,
+		}.EncodeTo(w)
+	}
+}
+
+func handleGetLinesWithStopID(e *Env) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+		lines := e.Backend.Lines()
+		stopID := params.ByName("stopID")
+		all, err := lines.GetAll(bson.M{
+			"stops": bson.M{
+				"_id": stopID,
+			},
+		})
+		if err != nil {
+			web.ErrorResponse(w, err, http.StatusInternalServerError)
+			return
+		}
+
+		web.Response{
+			OK:   true,
+			Data: all,
 		}.EncodeTo(w)
 	}
 }

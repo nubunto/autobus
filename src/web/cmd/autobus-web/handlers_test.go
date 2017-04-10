@@ -33,22 +33,23 @@ func newMockedMongoBackend() *mockedMongoBackend {
 func TestHandlers(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		name    string
-		method  string
-		path    string
-		query   string
-		env     *Env
-		handler func(*Env) httprouter.Handle
-		payload io.Reader
-		assert  func(*testing.T, *httptest.ResponseRecorder)
+		name         string
+		method       string
+		requestPath  string
+		registerPath string
+		query        string
+		env          *Env
+		handler      func(*Env) httprouter.Handle
+		payload      io.Reader
+		assert       func(*testing.T, *httptest.ResponseRecorder)
 	}{
 		{
-			name:    "GetLines",
-			method:  "GET",
-			path:    "/lines",
-			env:     newEnvWithMockedMongoBackend(),
-			payload: nil,
-			handler: handleGetLines,
+			name:         "GetLines",
+			method:       "GET",
+			registerPath: "/lines",
+			requestPath:  "/lines",
+			env:          newEnvWithMockedMongoBackend(),
+			handler:      handleGetLines,
 			assert: func(t *testing.T, rec *httptest.ResponseRecorder) {
 				if rec.Code != http.StatusOK {
 					t.Error("should have status code 200 ok, has:", rec.Code)
@@ -57,10 +58,25 @@ func TestHandlers(t *testing.T) {
 		},
 
 		{
-			name:   "CreateLine",
-			method: "POST",
-			path:   "/lines",
-			env:    newEnvWithMockedMongoBackend(),
+			name:         "GetLinesWithStopID",
+			method:       "GET",
+			registerPath: "/lines/:stopID",
+			requestPath:  "/lines/5bfcba74814989348fb",
+			env:          newEnvWithMockedMongoBackend(),
+			handler:      handleGetLinesWithStopID,
+			assert: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				if rec.Code != http.StatusOK {
+					t.Error("should have status code 200 ok, has:", rec.Code)
+				}
+			},
+		},
+
+		{
+			name:         "CreateLine",
+			method:       "POST",
+			registerPath: "/lines",
+			requestPath:  "/lines",
+			env:          newEnvWithMockedMongoBackend(),
 			payload: strings.NewReader(`
 				{
 					"name": "244",
@@ -82,10 +98,11 @@ func TestHandlers(t *testing.T) {
 		},
 
 		{
-			name:   "CreateBusStop",
-			method: "POST",
-			path:   "/stops",
-			env:    newEnvWithMockedMongoBackend(),
+			name:         "CreateBusStop",
+			method:       "POST",
+			registerPath: "/stops",
+			requestPath:  "/stops",
+			env:          newEnvWithMockedMongoBackend(),
 			payload: strings.NewReader(`
 				{
 					"name": "Sherlock Holmes stop",
@@ -105,12 +122,13 @@ func TestHandlers(t *testing.T) {
 		},
 
 		{
-			name:    "GetBusStop",
-			method:  "GET",
-			path:    "/stops",
-			query:   "latitude=1&longitude=2&radius=10",
-			env:     newEnvWithMockedMongoBackend(),
-			handler: handleGetStops,
+			name:         "GetBusStop",
+			method:       "GET",
+			registerPath: "/stops",
+			requestPath:  "/stops",
+			query:        "latitude=1&longitude=2&radius=10",
+			env:          newEnvWithMockedMongoBackend(),
+			handler:      handleGetStops,
 			assert: func(t *testing.T, rec *httptest.ResponseRecorder) {
 				if rec.Code != http.StatusOK {
 					t.Errorf("should have status code %d (%s), has %d (%s)",
@@ -128,11 +146,12 @@ func TestHandlers(t *testing.T) {
 		},
 
 		{
-			name:    "GetBusStopNoParams",
-			method:  "GET",
-			path:    "/stops",
-			env:     newEnvWithMockedMongoBackend(),
-			handler: handleGetStops,
+			name:         "GetBusStopNoParams",
+			method:       "GET",
+			registerPath: "/stops",
+			requestPath:  "/stops",
+			env:          newEnvWithMockedMongoBackend(),
+			handler:      handleGetStops,
 			assert: func(t *testing.T, rec *httptest.ResponseRecorder) {
 				if rec.Code != http.StatusBadRequest {
 					t.Errorf("should have status code %d (%s), has %d (%s)",
@@ -155,9 +174,9 @@ func TestHandlers(t *testing.T) {
 		t.Run(test.name, func(tt *testing.T) {
 			tt.Parallel()
 			mux := httprouter.New()
-			mux.Handle(test.method, test.path, test.handler(test.env))
+			mux.Handle(test.method, test.registerPath, test.handler(test.env))
 
-			req := httptest.NewRequest(test.method, "http://example.com"+test.path+"?"+test.query, test.payload)
+			req := httptest.NewRequest(test.method, "http://example.com"+test.requestPath+"?"+test.query, test.payload)
 			w := httptest.NewRecorder()
 
 			mux.ServeHTTP(w, req)

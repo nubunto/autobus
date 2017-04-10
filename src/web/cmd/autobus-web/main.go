@@ -47,6 +47,7 @@ func main() {
 	mux.GET("/stops", handleGetStops(env))
 
 	mux.GET("/lines", handleGetLines(env))
+	mux.GET("/lines/:stopID", handleGetLinesWithStopID(env))
 	mux.POST("/lines", handleCreateLine(env))
 
 	mux.GET("/version", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

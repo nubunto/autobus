@@ -18,14 +18,32 @@ compile:
     stage: build
     script:
         - sh build.sh
+    artifacts:
+        paths:
+            - bin/autobus-core
+            - bin/autobus-platform
+            - bin/autobus-web
 
 deploy_production:
     stage: deploy
+    tags:
+        - autobus-production
     script:
-        - sh build.sh
         - docker-compose -f docker-compose.yml -f production.yml build
         - docker-compose -f docker-compose.yml -f production.yml up -d
     environment:
         name: production
     only:
         - master
+
+deploy_staging:
+    stage: deploy
+    tags:
+        - autobus-staging
+    script:
+        - docker-compose -f docker-compose.yml -f production.yml build
+        - docker-compose -f docker-compose.yml -f production.yml up -d
+    environment:
+        name: staging
+    only:
+        - develop
