@@ -57,7 +57,6 @@ func handleCreateStop(e *Env) httprouter.Handle {
 			return
 		}
 		doc := web.BusStop{
-			ID:   bson.NewObjectId(),
 			Name: payload.Name,
 			Location: web.BusStopLocation{
 				Type:        "Point",
