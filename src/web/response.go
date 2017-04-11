@@ -42,3 +42,10 @@ func ErrorResponse(w http.ResponseWriter, err error, status int) {
 		http.Error(w, err.Error(), status)
 	}
 }
+
+// OK is shortcut for web.Response{OK: true, Data: data}.EncodeTo(w)
+func OK(w io.Writer, data interface{}) {
+	Response{
+		OK: true,
+	}.EncodeTo(w)
+}

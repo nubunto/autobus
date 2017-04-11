@@ -8,8 +8,10 @@ import (
 )
 
 type mockedMongoBackend struct {
-	lines *mockedLinesBackend
-	stops *mockedStopsBackend
+	lines        *mockedLinesBackend
+	stops        *mockedStopsBackend
+	gps          *mockedGPSBackend
+	gpsTransient *mockedGPSBackend
 }
 
 func (m *mockedMongoBackend) Lines() web.LinesBackend {
@@ -18,6 +20,14 @@ func (m *mockedMongoBackend) Lines() web.LinesBackend {
 
 func (m *mockedMongoBackend) Stops() web.StopsBackend {
 	return m.stops
+}
+
+func (m *mockedMongoBackend) GPS() web.GPSBackend {
+	return m.gps
+}
+
+func (m *mockedMongoBackend) GPSTransient() web.GPSBackend {
+	return m.gpsTransient
 }
 
 func (m *mockedMongoBackend) Close() error {
@@ -31,6 +41,10 @@ type mockedLinesBackend struct {
 
 type mockedStopsBackend struct {
 	stops []web.BusStop
+}
+
+type mockedGPSBackend struct {
+	gps []web.GPSData
 }
 
 func (ml *mockedLinesBackend) GetAll(selector interface{}) ([]web.Line, error) {
@@ -126,5 +140,29 @@ func (ml *mockedStopsBackend) Delete(selector interface{}) error {
 
 func (ml *mockedStopsBackend) Close() error {
 	// noop
+	return nil
+}
+
+func (ms *mockedGPSBackend) GetAll(s interface{}) ([]web.GPSData, error) {
+	return ms.gps, nil
+}
+
+func (ms *mockedGPSBackend) GetOne(_ interface{}) (*web.GPSData, error) {
+	return nil, web.ErrNotAllowed
+}
+
+func (ms *mockedGPSBackend) Create(_ interface{}) error {
+	return web.ErrNotAllowed
+}
+
+func (ms *mockedGPSBackend) Update(_, _ interface{}) error {
+	return web.ErrNotAllowed
+}
+
+func (ms *mockedGPSBackend) Delete(_ interface{}) error {
+	return web.ErrNotAllowed
+}
+
+func (ms *mockedGPSBackend) Close() error {
 	return nil
 }

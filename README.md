@@ -148,6 +148,7 @@ This is the current version.
 - `GET /lines[stop_id]`: Retrieves all the lines, or, if the `stop_id` param is present, returns the lines that contain said stop.
 - `POST /stops`: creates a new bus stop
 - `GET /stops?latitude=1&longitude=2&radius=100`: returns all the stop within the geographical coordinates denominated by the `latitude`, `longitude`, and `radius`. All arguments are mandatory. Not supplying them results in a BadRequest.
+- `GET /live`: returns the latest GPS information
 
 ## Future of the Web API
 

@@ -1,6 +1,7 @@
 package web
 
 import (
+	stderrors "errors"
 	"github.com/pkg/errors"
 	mgo "gopkg.in/mgo.v2"
 )
@@ -14,11 +15,17 @@ type Backend interface {
 	// Mainly, a interface that knows how to CRUD stops data
 	Stops() StopsBackend
 
-	// TODO: gps data (read-only)
+	// gps data (read-only)
+	GPS() GPSBackend
+
+	// gps transient data (read-only)
+	GPSTransient() GPSBackend
 
 	// Close releases resources held by the backend.
 	Close() error
 }
+
+var ErrNotAllowed = stderrors.New("not allowed")
 
 type LinesBackend interface {
 	GetAll(finder interface{}) ([]Line, error)
@@ -38,6 +45,19 @@ type StopsBackend interface {
 	Close() error
 }
 
+type GPSBackend interface {
+	GetAll(finder interface{}) ([]GPSData, error)
+	GetOne(finder interface{}) (*GPSData, error)
+	// Create is a noop. GPS data comes from somewhere else.
+	Create(interface{}) error
+	// Update is a noop.
+	Update(id, fields interface{}) error
+	// Delete is a noop
+	Delete(selector interface{}) error
+
+	Close() error
+}
+
 func NewMongoBackend(s *mgo.Session) Backend {
 	return &mongoBackend{
 		Session: s.Copy(),
@@ -47,12 +67,20 @@ func NewMongoBackend(s *mgo.Session) Backend {
 		StopsBackend: &mongoStopsBackend{
 			Session: s.Copy(),
 		},
+		GPSBackend: &mongoGPSBackend{
+			Session: s.Copy(),
+		},
+		GPSTransientBackend: &mongoGPSTransientBackend{
+			Session: s.Copy(),
+		},
 	}
 }
 
 type mongoBackend struct {
 	LinesBackend
 	StopsBackend
+	GPSBackend
+	GPSTransientBackend GPSBackend
 	*mgo.Session
 }
 
@@ -64,11 +92,13 @@ type mongoStopsBackend struct {
 	*mgo.Session
 }
 
-/*
 type mongoGPSBackend struct {
 	*mgo.Session
 }
-*/
+
+type mongoGPSTransientBackend struct {
+	*mgo.Session
+}
 
 func (mb *mongoBackend) Lines() LinesBackend {
 	return mb.LinesBackend
@@ -78,9 +108,19 @@ func (mb *mongoBackend) Stops() StopsBackend {
 	return mb.StopsBackend
 }
 
+func (mb *mongoBackend) GPS() GPSBackend {
+	return mb.GPSBackend
+}
+
+func (mb *mongoBackend) GPSTransient() GPSBackend {
+	return mb.GPSTransientBackend
+}
+
 func (mb *mongoBackend) Close() error {
 	mb.LinesBackend.Close()
 	mb.StopsBackend.Close()
+	mb.GPSBackend.Close()
+	mb.GPSTransientBackend.Close()
 	mb.Session.Close()
 	return nil
 }
@@ -209,21 +249,68 @@ func (ms *mongoStopsBackend) Close() error {
 	return nil
 }
 
-// TODO: implement GPS data
-/*
-func (mg *mongoGPSBackend) GetAll(selector interface{}) ([]GPS, error) {
-	panic("not implemented")
+func (mg *mongoGPSBackend) GetAll(selector interface{}) ([]GPSData, error) {
+	s := mg.Copy()
+	defer s.Close()
+
+	c := s.DB("autobus").C("gps_data")
+	var all []GPSData
+	if err := c.Find(selector).All(&all); err != nil {
+		return nil, errors.Wrap(err, "error retrieving gps data")
+	}
+	return all, nil
 }
-func (mg *mongoGPSBackend) GetOne(selector interface{}) (GPS, error) {
-	panic("not implemented")
+
+func (mg *mongoGPSBackend) GetOne(selector interface{}) (*GPSData, error) {
+	return nil, ErrNotAllowed
 }
+
 func (mg *mongoGPSBackend) Create(selector interface{}) error {
-	panic("not implemented")
+	return ErrNotAllowed
 }
+
 func (mg *mongoGPSBackend) Update(selector, update interface{}) error {
-	panic("not implemented")
+	return ErrNotAllowed
 }
+
 func (mg *mongoGPSBackend) Delete(selector interface{}) error {
-	panic("not implemented")
+	return ErrNotAllowed
 }
-*/
+
+func (mg *mongoGPSBackend) Close() error {
+	mg.Session.Close()
+	return nil
+}
+
+func (mg *mongoGPSTransientBackend) GetAll(selector interface{}) ([]GPSData, error) {
+	s := mg.Copy()
+	defer s.Close()
+
+	c := s.DB("autobus").C("gps_data_transient")
+	var all []GPSData
+	if err := c.Find(selector).All(&all); err != nil {
+		return nil, errors.Wrap(err, "error retrieving transient gps data")
+	}
+	return all, nil
+}
+
+func (mg *mongoGPSTransientBackend) GetOne(selector interface{}) (*GPSData, error) {
+	return nil, ErrNotAllowed
+}
+
+func (mg *mongoGPSTransientBackend) Create(selector interface{}) error {
+	return ErrNotAllowed
+}
+
+func (mg *mongoGPSTransientBackend) Update(selector, update interface{}) error {
+	return ErrNotAllowed
+}
+
+func (mg *mongoGPSTransientBackend) Delete(selector interface{}) error {
+	return ErrNotAllowed
+}
+
+func (mg *mongoGPSTransientBackend) Close() error {
+	mg.Session.Close()
+	return nil
+}

@@ -41,7 +41,7 @@ func main() {
 	}
 
 	mux := httprouter.New()
-	//mux.GET("/gps", handleGetGPS(env))
+	mux.GET("/live", handleGetGPSTransient(env))
 
 	mux.POST("/stops", handleCreateStop(env))
 	mux.GET("/stops", handleGetStops(env))

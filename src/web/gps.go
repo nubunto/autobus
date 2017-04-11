@@ -6,7 +6,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-type GPS struct {
+type GPSData struct {
 	ID          bson.ObjectId `json:"id" bson:"_id"`
 	MessageHead string        `json:"head" bson:"head"`
 	GPSID       string        `json:"gps_id" bson:"gps_id"`
@@ -20,6 +20,6 @@ type GPS struct {
 }
 
 type Location struct {
-	Type        string `json:"type"`
-	Coordinates string `json:"coordinates"`
+	Type        string    `json:"type"`
+	Coordinates []float64 `json:"coordinates"`
 }

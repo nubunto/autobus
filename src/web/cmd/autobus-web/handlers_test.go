@@ -29,6 +29,12 @@ func newMockedMongoBackend() *mockedMongoBackend {
 		stops: &mockedStopsBackend{
 			stops: make([]web.BusStop, 0),
 		},
+		gps: &mockedGPSBackend{
+			gps: make([]web.GPSData, 0),
+		},
+		gpsTransient: &mockedGPSBackend{
+			gps: make([]web.GPSData, 0),
+		},
 	}
 }
 
@@ -269,6 +275,33 @@ func TestHandlers(t *testing.T) {
 				}
 				if response.OK {
 					t.Error("should be a invalid response:", response)
+				}
+			},
+		},
+
+		{
+			name:         "GetGPSData",
+			method:       "GET",
+			registerPath: "/live",
+			requestPath:  "/live",
+			env:          newEnvWithMockedMongoBackend(),
+			handler:      handleGetGPSTransient,
+			assert: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				if rec.Code != http.StatusOK {
+					t.Errorf("should have status code %d (%s), has %d (%s)",
+						http.StatusOK, http.StatusText(http.StatusOK),
+						rec.Code, http.StatusText(rec.Code))
+				}
+				body := rec.Body.Bytes()
+				var response struct {
+					OK      bool   `json:"ok"`
+					Message string `json:"message"`
+				}
+				if err := json.Unmarshal(body, &response); err != nil {
+					t.Error("should be valid json:", err)
+				}
+				if !response.OK {
+					t.Error("should be a valid response:", response)
 				}
 			},
 		},
