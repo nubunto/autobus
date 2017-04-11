@@ -294,14 +294,18 @@ func TestHandlers(t *testing.T) {
 				}
 				body := rec.Body.Bytes()
 				var response struct {
-					OK      bool   `json:"ok"`
-					Message string `json:"message"`
+					OK      bool          `json:"ok"`
+					Message string        `json:"message"`
+					Data    []web.GPSData `json:"data"`
 				}
 				if err := json.Unmarshal(body, &response); err != nil {
 					t.Error("should be valid json:", err)
 				}
 				if !response.OK {
 					t.Error("should be a valid response:", response)
+				}
+				if len(response.Data) != 0 {
+					t.Error("should have 0 info on mocked backend", response)
 				}
 			},
 		},
